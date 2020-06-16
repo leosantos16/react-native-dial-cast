@@ -2,16 +2,15 @@
 
 ## Getting started
 
-`$ npm install react-native-cast --save`
+`$ npm install react-native-dial-cast --save`
 
 ### Mostly automatic installation
 
-`$ react-native link react-native-cast`
+`$ react-native link react-native-dial-cast`
 
 ## Usage
 ```javascript
-import Cast from 'react-native-cast';
+import Cast from 'react-native-dial-cast';
 
-// TODO: What to do with the module?
-Cast;
+Cast.startSearch();
 ```

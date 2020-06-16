@@ -1,4 +1,4 @@
-# react-native-cast
+# react-native-dial-cast
 
 ## Getting started
 

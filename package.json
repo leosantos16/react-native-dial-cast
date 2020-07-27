@@ -6,11 +6,12 @@
   "main": "index.js",
   "files": [
     "README.md",
+    "lib/DialCast.js",
     "index.js",
-    "react-native-cast.podspec"
+    "react-native-dial-cast.podspec"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest ./test/dial.test.js"
   },
   "repository": {
     "type": "git",
@@ -27,12 +28,20 @@
   "license": "MIT",
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
+  "dependencies": {
+    "react-native-ssdp": "2.8.2"
+  },
   "peerDependencies": {
     "react": "^16.8.1",
     "react-native": ">=0.60.0-rc.0 <1.0.x"
   },
   "devDependencies": {
+    "babel-jest": "^26.1.0",
+    "jest": "^26.1.0",
     "react": "^16.9.0",
     "react-native": "^0.61.5"
+  },
+  "jest": {
+    "preset": "react-native"
   }
 }

@@ -1,36 +1,66 @@
-import { Client } from 'react-native-ssdp';
+import { Client, Server } from 'react-native-ssdp';
 
 const SSDPClient = new Client();
 
-var devices = [];
+const SSDPServer = new Server();
 
-var additionalDataUrl = "";
+SSDPServer.addUSN('upnp:rootdevice');
+SSDPServer.addUSN('urn:schemas-upnp-org:device:MediaServer:1');
+SSDPServer.addUSN('urn:schemas-upnp-org:service:ContentDirectory:1');
+SSDPServer.addUSN('urn:schemas-upnp-org:service:ConnectionManager:1');
+SSDPServer.addUSN('urn:dial-multiscreen-org:service:dial:1');
+
+var devices = [], selectedDevice = {}, dataUrl = "";
 
 SSDPClient.on('response', (headers, statusCode, rinfo) => {
-    fetch(headers.location)
-    .then((response) => response.json())
+    fetch(headers.LOCATION)
+    .then((response) => {
+        dataUrl = response.map['application-url'];
+        return response.text()
+    })
     .then((application) => {
-        console.log(application);
-        devices.push(application);
+        if(!devices.includes(application)) {
+            devices.push(application);
+        }
     });
 });
 
 export default {
+    startServer() {
+        SSDPServer.start();
+    },
+
+    stopServer() {
+        SSDPServer.stop();
+    },
+
     startSearch() {
         SSDPClient.search('urn:dial-multiscreen-org:service:dial:1');
-        console.log("search");
+        return true;
     },
+
     stopSearch() {
         SSDPClient.stop();
+        return true;
     },
+
     listDevices() {
         return devices;
     },
+
     filterDevice(device) {
-        devices = devices.filter((val) => val === device);
+        selectedDevice = devices.filter((val) => identifyDevice(val) === identify(device));
+        return selectedDevice;
     },
+
+    identifyDevice(device) {
+        const firstpiece = device.split("<friendlyName");
+        const secondpiece = firstpiece[1].split("</friendlyName>");
+        return secondpiece[0];
+    },
+
     discoverApplication(packageName) {
-        fetch(devices["Application-URL"]+'/'+packageName+'?clientDialVer=2.2')
+        fetch(dataUrl+'/'+packageName+'?clientDialVer=2.2')
         .then((response) => {
             if(response.status != 404) {
                 response.text().then((xml) => {
@@ -41,19 +71,20 @@ export default {
             }
         });
     },
+
     installApplication(url) {
         fetch(url)
         .then((response) => {
             return response;
         });
     },
+
     launchApplication(application, payload) {
-        if(Object.keys(payload).length === 0) {
-            const header = {
-                "Content-length": "0"
-            };
-        } else {
-            const header = {
+        let header = {
+            "Content-length": "0"
+        };
+        if(Object.keys(payload).length) {
+            header = {
                 "Content-type": "text/plain",
                 "Charset": "UTF-8"
             };
@@ -67,14 +98,15 @@ export default {
             if(response.ok) {
                 response.json().then((json) => {
                     if(json.additionalDataUrl) {
-                        additionalDataUrl = json.additionalDataUrl;
+                        dataUrl = json.additionalDataUrl;
                     }
                 });
             }
         });
     },
+
     sendMessage(payload) {
-        fetch(additionalDataUrl, {
+        fetch(dataUrl, {
             method: "POST",
             body: payload
         })
@@ -82,14 +114,16 @@ export default {
             return response;
         });
     },
+
     hideApplication(application) {
         fetch(application+'/hide', {
             method: "POST"
         });
     },
+
     stopApplication(application) {
         fetch(application, {
             method: "DELETE"
         });
     }
-};
+}
